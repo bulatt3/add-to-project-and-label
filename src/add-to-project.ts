@@ -7,6 +7,9 @@ function isPathInput(text: string): boolean {
 }
 
 function getConfigFileContent(configPath: string): string {
+  core.info(`Getting config info from path ${configPath}`)
+  const files = fs.readdirSync('.')
+  core.info(`files in the current directory: ${files}`)
   if (!fs.existsSync(configPath)) {
     throw new Error(`Configuration file '${configPath}' not found`)
   }
