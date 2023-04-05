@@ -145,7 +145,7 @@ function addToProject() {
         core.info(`Project node ID: ${projectId}`);
         core.info(`Content ID: ${contentId}`);
         // Then, get the ID of the custom field
-        const customFieldId = yield octokit.graphql(`query getCustomField($projectId: ID!) {
+        const customFieldResp = yield octokit.graphql(`query getCustomField($projectId: ID!) {
         node(id: $projectId) {
           ... on ProjectV2 {
             fields(first: 20) {
@@ -165,7 +165,10 @@ function addToProject() {
       }`, {
             projectId
         });
-        core.info(`Custom field ID: ${customFieldId}, ${JSON.stringify(customFieldId)}`);
+        core.info(`Custom field ID: ${customFieldResp.node.field.nodes}, ${JSON.stringify(customFieldResp)}`);
+        const customFieldNode = customFieldResp.node.fields.nodes.filter((node) => node.name === customFieldName);
+        core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`);
+        core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`);
         // Next, use the GraphQL API to add the issue to the project.
         // If the issue has the same owner as the project, we can directly
         // add a project item. Otherwise, we add a draft issue.
