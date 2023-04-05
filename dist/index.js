@@ -217,12 +217,10 @@ function addToProject() {
             }
         }
       }`, {
-                input: {
-                    projectId,
-                    itemId,
-                    customFieldId,
-                    customFieldValueId
-                }
+                projectId,
+                itemId,
+                customFieldId,
+                customFieldValueId
             });
             core.info(`Set field value: ${JSON.stringify(setFieldValue)}`);
             core.setOutput('itemId', itemId);

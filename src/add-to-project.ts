@@ -280,12 +280,10 @@ export async function addToProject(): Promise<void> {
         }
       }`,
       {
-        input: {
-          projectId,
-          itemId,
-          customFieldId,
-          customFieldValueId
-        }
+        projectId,
+        itemId,
+        customFieldId,
+        customFieldValueId
       }
     )
 
