@@ -212,17 +212,36 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const add_to_project_1 = __nccwpck_require__(6672);
-(0, add_to_project_1.addToProject)()
-    .catch(err => {
-    core.setFailed(err.message);
-    process.exit(1);
-})
-    .then(() => {
-    process.exit(0);
-});
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (0, add_to_project_1.addToProject)();
+            process.exit(0);
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+            }
+            else {
+                core.setFailed(`Unknown error: ${error}`);
+            }
+            process.exit(1);
+        }
+    });
+}
+run();
 
 
 /***/ }),
