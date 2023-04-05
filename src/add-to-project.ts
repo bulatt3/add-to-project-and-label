@@ -87,6 +87,10 @@ export async function addToProject(): Promise<void> {
   core.debug(`Issue/PR owner: ${issueOwnerName}`)
   core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
 
+  core.info(
+    `Getting field value from label map: ${labelsMapInput}, labels: ${issueLabels}`
+  )
+
   let [customFieldName, customFieldValue] = getFieldValue(
     labelsMapInput,
     issueLabels
@@ -161,8 +165,8 @@ export async function addToProject(): Promise<void> {
   const projectId = idResp[ownerTypeQuery]?.projectV2.id
   const contentId = issue?.node_id
 
-  core.debug(`Project node ID: ${projectId}`)
-  core.debug(`Content ID: ${contentId}`)
+  core.info(`Project node ID: ${projectId}`)
+  core.info(`Content ID: ${contentId}`)
 
   // Then, get the ID of the custom field
   const customFieldId = await octokit.graphql<any>(
@@ -189,7 +193,7 @@ export async function addToProject(): Promise<void> {
     }
   )
 
-  core.debug(
+  core.info(
     `Custom field ID: ${customFieldId}, ${JSON.stringify(customFieldId)}`
   )
 
