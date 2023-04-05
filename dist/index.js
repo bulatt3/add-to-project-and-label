@@ -54,6 +54,9 @@ function getConfigFileContent(configPath) {
     let dir = path.resolve(__dirname, '..');
     files = fs.readdirSync(dir);
     core.info(`files in the parent directory: ${files}, ${dir}`);
+    dir = path.resolve(__dirname, '../.github');
+    files = fs.readdirSync(dir);
+    core.info(`files in the ../.github directory: ${files}, ${dir}`);
     dir = path.resolve(__dirname, '../..');
     files = fs.readdirSync(dir);
     core.info(`files in the grandparent directory: ${files}, ${dir}`);
