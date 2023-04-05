@@ -67,11 +67,16 @@ export async function addToProject(): Promise<void> {
 
   if (labelsMapInput) {
     core.info(`labelsMap: ${labelsMapInput}`)
+    let lls = []
     for (const [key, value] of Object.entries(JSON.parse(labelsMapInput))) {
-      core.info(`The name of the custom field: ${key}, its values: ${value}`)
+      core.info(`The name of the custom field: ${key}, its values: ${JSON.stringify(value)}`)
       if (Array.isArray(value)) {
         for (const label of value) {
-          core.info(`Label: ${label}`)
+          core.info(`Label: ${JSON.stringify(label)}`)
+          if (issueLabels.includes(label.label)) {
+            core.info(`The issue has label ${label.label}, so we add ${JSON.stringify(label)}`)
+            lls.push(key)
+          }
         }
       }
     }
@@ -143,6 +148,58 @@ export async function addToProject(): Promise<void> {
       projectNumber
     }
   )
+
+  // Then, get the ID of the custom field
+  const customFieldId = await octokit.graphql<any>(
+    `query getCustomFields($projectId: ID!) {
+      node(id: $projectId) {
+          ... on ProjectV2 {
+            fields(first: 10) {
+            }
+            items(first: 20) {
+              nodes{
+                id
+                fieldValues(first: 8) {
+                  nodes{                
+                    ... on ProjectV2ItemFieldTextValue {
+                      text
+                      field {
+                        ... on ProjectV2FieldCommon {
+                          id
+                          name
+                        }
+                      }
+                    }
+                    ... on ProjectV2ItemFieldSingleSelectValue {
+                      name
+                      field {
+                        ... on ProjectV2FieldCommon {
+                          id
+                          name
+                        }
+                      }
+                    }
+                  }              
+                }
+                content{              
+                  ...on Issue {
+                    title
+                    labels(first: 10) {
+                      nodes{
+                        id
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }`,
+          {
+            projectId: idResp,
+          }
+  )
+
 
   const projectId = idResp[ownerTypeQuery]?.projectV2.id
   const contentId = issue?.node_id
