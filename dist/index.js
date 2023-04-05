@@ -41,42 +41,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.mustGetOwnerTypeQuery = exports.addToProject = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const fs = __importStar(__nccwpck_require__(7147));
 const github = __importStar(__nccwpck_require__(5438));
-const path = __importStar(__nccwpck_require__(1017));
-function isPathInput(text) {
-    return !(text.includes('\n') || text.includes(':'));
-}
-function getConfigFileContent(configPath) {
-    core.info(`Getting config info from path ${configPath}`);
-    let files = fs.readdirSync(__dirname);
-    core.info(`files in the current directory: ${files}, ${__dirname}`);
-    let dir = path.resolve(__dirname, '..');
-    files = fs.readdirSync(dir);
-    core.info(`files in the parent directory: ${files}, ${dir}`);
-    dir = path.resolve(__dirname, '../.github');
-    files = fs.readdirSync(dir);
-    core.info(`files in the ../.github directory: ${files}, ${dir}`);
-    dir = path.resolve(__dirname, '../..');
-    files = fs.readdirSync(dir);
-    core.info(`files in the grandparent directory: ${files}, ${dir}`);
-    core.info(`Current working directory: ${process.cwd()}`);
-    files = fs.readdirSync(process.cwd());
-    core.info(`files in the current working directory: ${files}`);
-    dir = path.resolve(process.cwd(), '..');
-    files = fs.readdirSync(dir);
-    core.info(`files in the parent of the current working directory: ${files}, ${dir}`);
-    dir = path.resolve(process.cwd(), '../..');
-    files = fs.readdirSync(dir);
-    core.info(`files in the grandparent of the current working directory: ${files}, ${dir}`);
-    if (!fs.existsSync(configPath)) {
-        throw new Error(`Configuration file '${configPath}' not found`);
-    }
-    if (!fs.lstatSync(configPath).isFile()) {
-        throw new Error(`'${configPath}' is not a file.`);
-    }
-    return fs.readFileSync(configPath, { encoding: 'utf8' });
-}
 const urlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
 function addToProject() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
@@ -96,15 +61,24 @@ function addToProject() {
         const issue = (_b = github.context.payload.issue) !== null && _b !== void 0 ? _b : github.context.payload.pull_request;
         const issueLabels = ((_c = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _c !== void 0 ? _c : []).map((l) => l.name.toLowerCase());
         const issueOwnerName = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.login;
-        const labelsInput = core.getInput('label-map', { required: false });
+        const labelsMapInput = core.getInput('label-map', { required: false });
         core.info(`Issue/PR owner: ${issueOwnerName}`);
         core.info(`Issue/PR labels: ${issueLabels.join(', ')}`);
         core.debug(`Issue/PR owner: ${issueOwnerName}`);
         core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`);
-        const labelsYaml = isPathInput(labelsInput)
-            ? getConfigFileContent(labelsInput)
-            : labelsInput;
-        core.info(`labelsYaml: ${labelsYaml}`);
+        if (labelsMapInput) {
+            core.info(`labelsMap: ${labelsMapInput}`);
+            for (const [key, value] of Object.entries(JSON.parse(labelsMapInput))) {
+                core.info(`The name of the custom field: ${key}, its values: ${value}`);
+                if (Array.isArray(value)) {
+                    for (const label of value) {
+                        core.info(`Label: ${label}`);
+                    }
+                }
+            }
+        }
+        const labels = labelsMapInput ? JSON.parse(labelsMapInput) : {};
+        core.info(`labels: ${labels}`);
         // Ensure the issue matches our `labeled` filter based on the label-operator.
         if (labelOperator === 'and') {
             if (!labeled.every(l => issueLabels.includes(l))) {

@@ -1,47 +1,6 @@
 import * as core from '@actions/core'
-import * as fs from 'fs'
 import * as github from '@actions/github'
-import * as path from 'path'
 
-function isPathInput(text: string): boolean {
-  return !(text.includes('\n') || text.includes(':'))
-}
-
-function getConfigFileContent(configPath: string): string {
-  core.info(`Getting config info from path ${configPath}`)
-  let files = fs.readdirSync(__dirname)
-  core.info(`files in the current directory: ${files}, ${__dirname}`)
-  let dir = path.resolve(__dirname, '..')
-  files = fs.readdirSync(dir)
-  core.info(`files in the parent directory: ${files}, ${dir}`)
-  dir = path.resolve(__dirname, '../.github')
-  files = fs.readdirSync(dir)
-  core.info(`files in the ../.github directory: ${files}, ${dir}`)
-
-  dir = path.resolve(__dirname, '../..')
-  files = fs.readdirSync(dir)
-  core.info(`files in the grandparent directory: ${files}, ${dir}`)
-
-  core.info(`Current working directory: ${process.cwd()}`)
-  files = fs.readdirSync(process.cwd())
-  core.info(`files in the current working directory: ${files}`)
-  dir = path.resolve(process.cwd(), '..')
-  files = fs.readdirSync(dir)
-  core.info(`files in the parent of the current working directory: ${files}, ${dir}`)
-  dir = path.resolve(process.cwd(), '../..')
-  files = fs.readdirSync(dir)
-  core.info(`files in the grandparent of the current working directory: ${files}, ${dir}`)
-
-  if (!fs.existsSync(configPath)) {
-    throw new Error(`Configuration file '${configPath}' not found`)
-  }
-
-  if (!fs.lstatSync(configPath).isFile()) {
-    throw new Error(`'${configPath}' is not a file.`)
-  }
-
-  return fs.readFileSync(configPath, {encoding: 'utf8'})
-}
 
 const urlParse =
   /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/
@@ -99,17 +58,27 @@ export async function addToProject(): Promise<void> {
   )
   const issueOwnerName = github.context.payload.repository?.owner.login
 
-  const labelsInput = core.getInput('label-map', {required: false})
+  const labelsMapInput = core.getInput('label-map', {required: false})
 
   core.info(`Issue/PR owner: ${issueOwnerName}`)
   core.info(`Issue/PR labels: ${issueLabels.join(', ')}`)
   core.debug(`Issue/PR owner: ${issueOwnerName}`)
   core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
-  const labelsYaml = isPathInput(labelsInput)
-    ? getConfigFileContent(labelsInput)
-    : labelsInput
 
-  core.info(`labelsYaml: ${labelsYaml}`)
+  if (labelsMapInput) {
+    core.info(`labelsMap: ${labelsMapInput}`)
+    for (const [key, value] of Object.entries(JSON.parse(labelsMapInput))) {
+      core.info(`The name of the custom field: ${key}, its values: ${value}`)
+      if (Array.isArray(value)) {
+        for (const label of value) {
+          core.info(`Label: ${label}`)
+        }
+      }
+    }
+  }
+  const labels = labelsMapInput ? JSON.parse(labelsMapInput) : {}
+
+  core.info(`labels: ${labels}`)
 
   // Ensure the issue matches our `labeled` filter based on the label-operator.
   if (labelOperator === 'and') {
@@ -226,6 +195,7 @@ export async function addToProject(): Promise<void> {
 
     core.setOutput('itemId', addResp.addProjectV2DraftIssue.projectItem.id)
   }
+
 }
 
 export function mustGetOwnerTypeQuery(
