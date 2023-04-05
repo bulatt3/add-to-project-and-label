@@ -39,10 +39,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.mustGetOwnerTypeQuery = exports.addToProject = void 0;
+exports.mustGetOwnerTypeQuery = exports.addToProject = exports.getFieldValue = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const urlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
+function getFieldValue(labelsMap, labels) {
+    if (!labelsMap) {
+        return [null, null];
+    }
+    const labelsMapObject = JSON.parse(labelsMap);
+    if (!labelsMapObject) {
+        return [null, null];
+    }
+    for (const value of Object.values(labelsMapObject)) {
+        if (Array.isArray(value)) {
+            for (const label of value) {
+                if (labels.includes(label.label)) {
+                    return label.fieldValue;
+                }
+            }
+        }
+    }
+    return [null, null];
+}
+exports.getFieldValue = getFieldValue;
 function addToProject() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     return __awaiter(this, void 0, void 0, function* () {
@@ -66,24 +86,8 @@ function addToProject() {
         core.info(`Issue/PR labels: ${issueLabels.join(', ')}`);
         core.debug(`Issue/PR owner: ${issueOwnerName}`);
         core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`);
-        if (labelsMapInput) {
-            core.info(`labelsMap: ${labelsMapInput}`);
-            let lls = [];
-            for (const [key, value] of Object.entries(JSON.parse(labelsMapInput))) {
-                core.info(`The name of the custom field: ${key}, its values: ${JSON.stringify(value)}`);
-                if (Array.isArray(value)) {
-                    for (const label of value) {
-                        core.info(`Label: ${JSON.stringify(label)}`);
-                        if (issueLabels.includes(label.label)) {
-                            core.info(`The issue has label ${label.label}, so we add ${JSON.stringify(label)}`);
-                            lls.push(key);
-                        }
-                    }
-                }
-            }
-        }
-        const labels = labelsMapInput ? JSON.parse(labelsMapInput) : {};
-        core.info(`labels: ${labels}`);
+        let [customFieldName, customFieldValue] = getFieldValue(labelsMapInput, issueLabels);
+        core.info(`Custom field name: ${customFieldName}, value: ${customFieldValue}`);
         // Ensure the issue matches our `labeled` filter based on the label-operator.
         if (labelOperator === 'and') {
             if (!labeled.every(l => issueLabels.includes(l))) {
@@ -126,32 +130,32 @@ function addToProject() {
             projectOwnerName,
             projectNumber
         });
+        const projectId = (_j = idResp[ownerTypeQuery]) === null || _j === void 0 ? void 0 : _j.projectV2.id;
+        const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
+        core.debug(`Project node ID: ${projectId}`);
+        core.debug(`Content ID: ${contentId}`);
         // Then, get the ID of the custom field
         const customFieldId = yield octokit.graphql(`query getCustomField($projectId: ID!) {
-      node(id: $projectId) {
-        ... on ProjectV2 {
-          fields(first: 20) {
-            nodes {
-              ... on ProjectV2SingleSelectField {
-                id
-                name
-                options {
+        node(id: $projectId) {
+          ... on ProjectV2 {
+            fields(first: 20) {
+              nodes {
+                ... on ProjectV2SingleSelectField {
                   id
                   name
+                  options {
+                    id
+                    name
+                  }
                 }
               }
             }
           }
         }
-      }
-    }`, {
-            projectId: idResp,
+      }`, {
+            projectId
         });
         core.debug(`Custom field ID: ${customFieldId}, ${JSON.stringify(customFieldId)}`);
-        const projectId = (_j = idResp[ownerTypeQuery]) === null || _j === void 0 ? void 0 : _j.projectV2.id;
-        const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
-        core.debug(`Project node ID: ${projectId}`);
-        core.debug(`Content ID: ${contentId}`);
         // Next, use the GraphQL API to add the issue to the project.
         // If the issue has the same owner as the project, we can directly
         // add a project item. Otherwise, we add a draft issue.
