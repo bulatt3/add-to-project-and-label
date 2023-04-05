@@ -49,15 +49,13 @@ export async function addToProject(): Promise<void> {
   const issue = github.context.payload.issue ?? github.context.payload.pull_request
   const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) => l.name.toLowerCase())
   const issueOwnerName = github.context.payload.repository?.owner.login
-  const issuePriorityLabel: string = issueLabels.find((l) => l.includes("priority: "))
   
-  if (!issuePriorityLabel) {
-    core.info(`Skipping issue ${issue?.number} because it doesn't have a priority label`)
-    core.info(`Issue/PR labels: ${issueLabels.join(', ')}`)
-    return
-  }
-  const isssuePriority = issuePriorityLabel.split("priority: ")[1].trim()
-
+  const labelsInput = core.getInput('labels', {required: false})
+  const labelsYaml = isPathInput(labelsInput) ? getConfigFileContent(labelsInput) : labelsInput
+  
+  core.info(`labelsYaml: ${labelsYaml}`)
+  core.info(`Issue/PR owner: ${issueOwnerName}`)
+  core.info(`Issue/PR labels: ${issueLabels.join(', ')}`)
   core.debug(`Issue/PR owner: ${issueOwnerName}`)
   core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
 
