@@ -175,10 +175,8 @@ function addToProject() {
         core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`);
         core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`);
         const customFieldOptions = customFieldNode === null || customFieldNode === void 0 ? void 0 : customFieldNode.options;
-        const customFieldValueId = customFieldOptions === null || customFieldOptions === void 0 ? void 0 : customFieldOptions.filter((option) => { if (option.name === customFieldValue) {
-            return option.id;
-        } })[0];
-        core.info(`Custom field value ID: ${customFieldValueId}`);
+        const customFieldValueId = customFieldOptions === null || customFieldOptions === void 0 ? void 0 : customFieldOptions.filter((option) => option.name === customFieldValue)[0];
+        core.info(`Custom field value ID: ${JSON.stringify(customFieldValueId)}`);
         // Next, use the GraphQL API to add the issue to the project.
         // If the issue has the same owner as the project, we can directly
         // add a project item. Otherwise, we add a draft issue.
@@ -199,13 +197,13 @@ function addToProject() {
             const itemId = addResp.addProjectV2ItemById.item.id;
             const setFieldValue = yield octokit.graphql(`mutation (
         $projectId: ID!
-        $item: ID!
+        $itemId: ID!
         $priority_field: ID!
         $priority_value: String!
       ) {
         set_priority_field: updateProjectV2ItemFieldValue(input: {
-          projectId: $project
-          itemId: $item
+          projectId: $projectId
+          itemId: $itemId
           fieldId: $priority_field
           value: {
             singleSelectOptionId: $priority_value
@@ -220,7 +218,7 @@ function addToProject() {
                     projectId,
                     itemId,
                     priority_field: customFieldNode.id,
-                    priority_value: customFieldValueId
+                    priority_value: customFieldValueId === null || customFieldValueId === void 0 ? void 0 : customFieldValueId.id
                 }
             });
             core.info(`Set field value: ${JSON.stringify(setFieldValue)}`);

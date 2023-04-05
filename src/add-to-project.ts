@@ -227,9 +227,9 @@ export async function addToProject(): Promise<void> {
   core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`)
 
   const customFieldOptions = customFieldNode?.options
-  const customFieldValueId = customFieldOptions?.filter((option: {name: string, id: string }) => { if (option.name === customFieldValue) { return option.id } })[0]
+  const customFieldValueId = customFieldOptions?.filter((option: {name: string, id: string }) => option.name === customFieldValue )[0]
 
-  core.info(`Custom field value ID: ${customFieldValueId}`)
+  core.info(`Custom field value ID: ${JSON.stringify(customFieldValueId)}`)
 
   // Next, use the GraphQL API to add the issue to the project.
   // If the issue has the same owner as the project, we can directly
@@ -258,13 +258,13 @@ export async function addToProject(): Promise<void> {
     const setFieldValue = await octokit.graphql<any>(
       `mutation (
         $projectId: ID!
-        $item: ID!
+        $itemId: ID!
         $priority_field: ID!
         $priority_value: String!
       ) {
         set_priority_field: updateProjectV2ItemFieldValue(input: {
-          projectId: $project
-          itemId: $item
+          projectId: $projectId
+          itemId: $itemId
           fieldId: $priority_field
           value: {
             singleSelectOptionId: $priority_value
@@ -280,7 +280,7 @@ export async function addToProject(): Promise<void> {
           projectId,
           itemId,
           priority_field: customFieldNode.id,
-          priority_value: customFieldValueId
+          priority_value: customFieldValueId?.id
         }
       }
     )
