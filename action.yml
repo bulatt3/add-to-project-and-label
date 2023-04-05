@@ -1,11 +1,24 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: Add To GitHub projects and set custom field values from labels
+description: Automatically add issues and PRs to GitHub projects; set project custom field values based on issue labels
+author: GitHub
+branding:
+  icon: table
 inputs:
-  milliseconds: # change this
+  project-url:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: URL of the project to add issues to
+  github-token:
+    required: true
+    description: A GitHub personal access token with write access to the project
+  labeled:
+    required: false
+    description: A comma-separated list of labels to use as a filter for issue to be added
+  label-operator:
+    required: false
+    description: The behavior of the labels filter, AND to match all labels, OR to match any label, NOT to exclude any listed label (default is OR)
+  label-map:
+    required: false
+    description: The YAML file with the mapping of issue labels to the project custom fields
 runs:
   using: 'node16'
   main: 'dist/index.js'
