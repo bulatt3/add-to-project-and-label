@@ -36,24 +36,26 @@ interface ProjectV2AddDraftIssueResponse {
 
 export function getFieldValue(
   labelsMap: string | undefined,
-  labels: string[]
+  issueLabels: string[]
 ): [string | null, string | null] {
   if (typeof labelsMap !== 'string') {
     return [null, null]
   }
   try {
     const labelsMapObject = JSON.parse(labelsMap)
+    const labelNames = Object.keys(labelsMapObject)
     for (const value of Object.values(labelsMapObject)) {
-      core.info(`Value: ${value} (${typeof value}), labels: ${labels}`)
+      core.info(`Value: ${JSON.stringify(value)} (${typeof value}), labels: ${issueLabels}`)
+      for (const label of issueLabels) {
+        core.info(`Label: ${label} (${typeof label}), type of issueLabels: ${typeof issueLabels}`)
+      }
       if (Array.isArray(value)) {
         for (const label of value) {
-          if (labels.includes(label.label)) {
+          if (issueLabels.includes(label.label)) {
             core.info(
-              `Found label: ${label.label}, value: ${
-                label.fieldValue
-              } or ${JSON.stringify(label)}`
+              `Returning <${label.fieldValue}>`
             )
-            return label.fieldValue
+            return [labelNames[0], label.fieldValue]
           }
         }
       }

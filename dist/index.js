@@ -43,19 +43,23 @@ exports.mustGetOwnerTypeQuery = exports.addToProject = exports.getFieldValue = v
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const urlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
-function getFieldValue(labelsMap, labels) {
+function getFieldValue(labelsMap, issueLabels) {
     if (typeof labelsMap !== 'string') {
         return [null, null];
     }
     try {
         const labelsMapObject = JSON.parse(labelsMap);
+        const labelNames = Object.keys(labelsMapObject);
         for (const value of Object.values(labelsMapObject)) {
-            core.info(`Value: ${value} (${typeof value}), labels: ${labels}`);
+            core.info(`Value: ${JSON.stringify(value)} (${typeof value}), labels: ${issueLabels}`);
+            for (const label of issueLabels) {
+                core.info(`Label: ${label} (${typeof label}), type of issueLabels: ${typeof issueLabels}`);
+            }
             if (Array.isArray(value)) {
                 for (const label of value) {
-                    if (labels.includes(label.label)) {
-                        core.info(`Found label: ${label.label}, value: ${label.fieldValue} or ${JSON.stringify(label)}`);
-                        return label.fieldValue;
+                    if (issueLabels.includes(label.label)) {
+                        core.info(`Returning <${label.fieldValue}>`);
+                        return [labelNames[0], label.fieldValue];
                     }
                 }
             }
