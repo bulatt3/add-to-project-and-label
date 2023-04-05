@@ -1,15 +1,23 @@
 import * as core from '@actions/core'
 import * as fs from 'fs'
 import * as github from '@actions/github'
+import * as path from 'path'
 
 function isPathInput(text: string): boolean {
   return !(text.includes('\n') || text.includes(':'))
 }
 
 function getConfigFileContent(configPath: string): string {
-  core.info(`Getting config info from path ${configPath}`)
-  const files = fs.readdirSync(__dirname)
+  core.info(`Getting config info from path ${configPath}, cwd: ${process.cwd()}`)
+  let files = fs.readdirSync(__dirname)
   core.info(`files in the current directory: ${files}, ${__dirname}`)
+  let dir = path.resolve(__dirname, '..')
+  files = fs.readdirSync(dir)
+  core.info(`files in the parent directory: ${files}, ${dir}`)
+  dir = path.resolve(__dirname, '../..')
+  files = fs.readdirSync(dir)
+  core.info(`files in the grandparent directory: ${files}, ${dir}`)
+
   if (!fs.existsSync(configPath)) {
     throw new Error(`Configuration file '${configPath}' not found`)
   }

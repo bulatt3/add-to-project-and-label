@@ -43,13 +43,20 @@ exports.mustGetOwnerTypeQuery = exports.addToProject = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(7147));
 const github = __importStar(__nccwpck_require__(5438));
+const path = __importStar(__nccwpck_require__(1017));
 function isPathInput(text) {
     return !(text.includes('\n') || text.includes(':'));
 }
 function getConfigFileContent(configPath) {
-    core.info(`Getting config info from path ${configPath}`);
-    const files = fs.readdirSync(__dirname);
+    core.info(`Getting config info from path ${configPath}, cwd: ${process.cwd()}`);
+    let files = fs.readdirSync(__dirname);
     core.info(`files in the current directory: ${files}, ${__dirname}`);
+    let dir = path.resolve(__dirname, '..');
+    files = fs.readdirSync(dir);
+    core.info(`files in the parent directory: ${files}, ${dir}`);
+    dir = path.resolve(__dirname, '../..');
+    files = fs.readdirSync(dir);
+    core.info(`files in the grandparent directory: ${files}, ${dir}`);
     if (!fs.existsSync(configPath)) {
         throw new Error(`Configuration file '${configPath}' not found`);
     }
