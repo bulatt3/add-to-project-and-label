@@ -77,7 +77,7 @@ function getFieldValue(labelsMap, issueLabels) {
 }
 exports.getFieldValue = getFieldValue;
 function addToProject() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     return __awaiter(this, void 0, void 0, function* () {
         const projectUrl = core.getInput('project-url', { required: true });
         const ghToken = core.getInput('github-token', { required: true });
@@ -169,8 +169,9 @@ function addToProject() {
       }`, {
             projectId
         });
-        core.info(`Custom field ID: ${customFieldResp.node.field.nodes}, ${JSON.stringify(customFieldResp)}`);
-        const customFieldNode = customFieldResp.node.fields.nodes.filter((node) => node.name === customFieldName);
+        core.info(`Requested custom field: ${JSON.stringify(customFieldResp)} using the ID: ${projectId}`);
+        core.info(`Custom field ID: ${(_l = (_k = customFieldResp === null || customFieldResp === void 0 ? void 0 : customFieldResp.node) === null || _k === void 0 ? void 0 : _k.fields) === null || _l === void 0 ? void 0 : _l.nodes}, ${JSON.stringify(customFieldResp)}`);
+        const customFieldNode = (_p = (_o = (_m = customFieldResp === null || customFieldResp === void 0 ? void 0 : customFieldResp.node) === null || _m === void 0 ? void 0 : _m.fields) === null || _o === void 0 ? void 0 : _o.nodes) === null || _p === void 0 ? void 0 : _p.filter((node) => (node === null || node === void 0 ? void 0 : node.name) === customFieldName);
         core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`);
         core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`);
         // Next, use the GraphQL API to add the issue to the project.

@@ -45,16 +45,20 @@ export function getFieldValue(
     const labelsMapObject = JSON.parse(labelsMap)
     const labelNames = Object.keys(labelsMapObject)
     for (const value of Object.values(labelsMapObject)) {
-      core.info(`Value: ${JSON.stringify(value)} (${typeof value}), labels: ${issueLabels}`)
+      core.info(
+        `Value: ${JSON.stringify(
+          value
+        )} (${typeof value}), labels: ${issueLabels}`
+      )
       for (const label of issueLabels) {
-        core.info(`Label: ${label} (${typeof label}), type of issueLabels: ${typeof issueLabels}`)
+        core.info(
+          `Label: ${label} (${typeof label}), type of issueLabels: ${typeof issueLabels}`
+        )
       }
       if (Array.isArray(value)) {
         for (const label of value) {
           if (issueLabels.includes(label.label)) {
-            core.info(
-              `Returning <${label.fieldValue}>`
-            )
+            core.info(`Returning <${label.fieldValue}>`)
             return [labelNames[0], label.fieldValue]
           }
         }
@@ -206,15 +210,19 @@ export async function addToProject(): Promise<void> {
       projectId
     }
   )
-  core.info(`Requested custom field: ${JSON.stringify(customFieldResp)} using the ID: ${projectId}`)
+  core.info(
+    `Requested custom field: ${JSON.stringify(
+      customFieldResp
+    )} using the ID: ${projectId}`
+  )
   core.info(
     `Custom field ID: ${customFieldResp?.node?.fields?.nodes}, ${JSON.stringify(
       customFieldResp
     )}`
   )
-  const customFieldNode = customFieldResp.node.fields.nodes.filter(
+  const customFieldNode = customFieldResp?.node?.fields?.nodes?.filter(
     (node: {name: string; id: string; options: unknown[]}) =>
-      node.name === customFieldName
+      node?.name === customFieldName
   )
 
   core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`)
