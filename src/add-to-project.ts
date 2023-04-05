@@ -38,22 +38,34 @@ export function getFieldValue(
   labelsMap: string | undefined,
   labels: string[]
 ): [string | null, string | null] {
-  if (!labelsMap) {
+  if (typeof labelsMap !== 'string') {
     return [null, null]
   }
-  const labelsMapObject = JSON.parse(labelsMap)
-  if (!labelsMapObject) {
-    return [null, null]
-  }
-  for (const value of Object.values(labelsMapObject)) {
-    if (Array.isArray(value)) {
-      for (const label of value) {
-        if (labels.includes(label.label)) {
-          return label.fieldValue
+  try {
+    const labelsMapObject = JSON.parse(labelsMap)
+    for (const value of Object.values(labelsMapObject)) {
+      core.info(`Value: ${value} (${typeof value}), labels: ${labels}`)
+      if (Array.isArray(value)) {
+        for (const label of value) {
+          if (labels.includes(label.label)) {
+            core.info(
+              `Found label: ${label.label}, value: ${
+                label.fieldValue
+              } or ${JSON.stringify(label)}`
+            )
+            return label.fieldValue
+          }
         }
       }
     }
+  } catch (error) {
+    if (error instanceof Error) {
+      core.error(`Error parsing label map: ${error.message}`)
+    } else {
+      core.error(`Error parsing label map: ${error}`)
+    }
   }
+
   return [null, null]
 }
 
@@ -91,7 +103,7 @@ export async function addToProject(): Promise<void> {
     `Getting field value from label map: ${labelsMapInput}, labels: ${issueLabels}`
   )
 
-  let [customFieldName, customFieldValue] = getFieldValue(
+  const [customFieldName, customFieldValue] = getFieldValue(
     labelsMapInput,
     issueLabels
   )
