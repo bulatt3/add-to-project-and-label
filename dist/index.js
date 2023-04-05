@@ -173,9 +173,11 @@ function addToProject() {
         core.info(`Custom field ID: ${(_l = (_k = customFieldResp === null || customFieldResp === void 0 ? void 0 : customFieldResp.node) === null || _k === void 0 ? void 0 : _k.fields) === null || _l === void 0 ? void 0 : _l.nodes}, ${JSON.stringify(customFieldResp)}`);
         const customFieldNode = (_p = (_o = (_m = customFieldResp === null || customFieldResp === void 0 ? void 0 : customFieldResp.node) === null || _m === void 0 ? void 0 : _m.fields) === null || _o === void 0 ? void 0 : _o.nodes) === null || _p === void 0 ? void 0 : _p.filter((node) => (node === null || node === void 0 ? void 0 : node.name) === customFieldName)[0];
         core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`);
-        core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`);
+        const customFieldId = customFieldNode === null || customFieldNode === void 0 ? void 0 : customFieldNode.id;
+        core.info(`Probably the field ID: ${customFieldId}}`);
         const customFieldOptions = customFieldNode === null || customFieldNode === void 0 ? void 0 : customFieldNode.options;
-        const customFieldValueId = customFieldOptions === null || customFieldOptions === void 0 ? void 0 : customFieldOptions.filter((option) => option.name === customFieldValue)[0];
+        const customFieldValueObject = customFieldOptions === null || customFieldOptions === void 0 ? void 0 : customFieldOptions.filter((option) => option.name === customFieldValue)[0];
+        const customFieldValueId = customFieldValueObject === null || customFieldValueObject === void 0 ? void 0 : customFieldValueObject.id;
         core.info(`Custom field value ID: ${JSON.stringify(customFieldValueId)}`);
         // Next, use the GraphQL API to add the issue to the project.
         // If the issue has the same owner as the project, we can directly
@@ -195,18 +197,19 @@ function addToProject() {
                 }
             });
             const itemId = addResp.addProjectV2ItemById.item.id;
+            core.info(`Will set field values using item ID: ${itemId}, project ID: ${projectId}, customFieldId: ${customFieldId}, fieldValue: ${customFieldValueId}`);
             const setFieldValue = yield octokit.graphql(`mutation (
         $projectId: ID!
         $itemId: ID!
-        $priority_field: ID!
-        $priority_value: String!
+        $customFieldId: ID!
+        $customFieldValueId: String!
       ) {
         set_priority_field: updateProjectV2ItemFieldValue(input: {
           projectId: $projectId
           itemId: $itemId
-          fieldId: $priority_field
+          fieldId: $customFieldId
           value: {
-            singleSelectOptionId: $priority_value
+            singleSelectOptionId: $customFieldValueId
             }
         }) {
           projectV2Item {
@@ -217,8 +220,8 @@ function addToProject() {
                 input: {
                     projectId,
                     itemId,
-                    priority_field: customFieldNode.id,
-                    priority_value: customFieldValueId === null || customFieldValueId === void 0 ? void 0 : customFieldValueId.id
+                    customFieldId,
+                    customFieldValueId
                 }
             });
             core.info(`Set field value: ${JSON.stringify(setFieldValue)}`);

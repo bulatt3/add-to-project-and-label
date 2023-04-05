@@ -224,10 +224,12 @@ export async function addToProject(): Promise<void> {
   )[0]
 
   core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`)
-  core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`)
+  const customFieldId = customFieldNode?.id
+  core.info(`Probably the field ID: ${customFieldId}}`)
 
   const customFieldOptions = customFieldNode?.options
-  const customFieldValueId = customFieldOptions?.filter((option: {name: string, id: string }) => option.name === customFieldValue )[0]
+  const customFieldValueObject = customFieldOptions?.filter((option: {name: string, id: string }) => option.name === customFieldValue )[0]
+  const customFieldValueId = customFieldValueObject?.id
 
   core.info(`Custom field value ID: ${JSON.stringify(customFieldValueId)}`)
 
@@ -255,19 +257,21 @@ export async function addToProject(): Promise<void> {
 
     const itemId = addResp.addProjectV2ItemById.item.id
 
+    core.info(`Will set field values using item ID: ${itemId}, project ID: ${projectId}, customFieldId: ${customFieldId}, fieldValue: ${customFieldValueId}`)
+
     const setFieldValue = await octokit.graphql<any>(
       `mutation (
         $projectId: ID!
         $itemId: ID!
-        $priority_field: ID!
-        $priority_value: String!
+        $customFieldId: ID!
+        $customFieldValueId: String!
       ) {
         set_priority_field: updateProjectV2ItemFieldValue(input: {
           projectId: $projectId
           itemId: $itemId
-          fieldId: $priority_field
+          fieldId: $customFieldId
           value: {
-            singleSelectOptionId: $priority_value
+            singleSelectOptionId: $customFieldValueId
             }
         }) {
           projectV2Item {
@@ -279,8 +283,8 @@ export async function addToProject(): Promise<void> {
         input: {
           projectId,
           itemId,
-          priority_field: customFieldNode.id,
-          priority_value: customFieldValueId?.id
+          customFieldId,
+          customFieldValueId
         }
       }
     )
