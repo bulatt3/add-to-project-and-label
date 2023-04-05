@@ -34,6 +34,29 @@ interface ProjectV2AddDraftIssueResponse {
   }
 }
 
+export function getFieldValue(
+  labelsMap: string | undefined,
+  labels: string[]
+): [string | null, string | null] {
+  if (!labelsMap) {
+    return [null, null]
+  }
+  const labelsMapObject = JSON.parse(labelsMap)
+  if (!labelsMapObject) {
+    return [null, null]
+  }
+  for (const value of Object.values(labelsMapObject)) {
+    if (Array.isArray(value)) {
+      for (const label of value) {
+        if (labels.includes(label.label)) {
+          return label.fieldValue
+        }
+      }
+    }
+  }
+  return [null, null]
+}
+
 export async function addToProject(): Promise<void> {
   const projectUrl = core.getInput('project-url', {required: true})
   const ghToken = core.getInput('github-token', {required: true})
@@ -64,33 +87,12 @@ export async function addToProject(): Promise<void> {
   core.debug(`Issue/PR owner: ${issueOwnerName}`)
   core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
 
-  if (labelsMapInput) {
-    core.info(`labelsMap: ${labelsMapInput}`)
-    let lls = []
-    for (const [key, value] of Object.entries(JSON.parse(labelsMapInput))) {
-      core.info(
-        `The name of the custom field: ${key}, its values: ${JSON.stringify(
-          value
-        )}`
-      )
-      if (Array.isArray(value)) {
-        for (const label of value) {
-          core.info(`Label: ${JSON.stringify(label)}`)
-          if (issueLabels.includes(label.label)) {
-            core.info(
-              `The issue has label ${label.label}, so we add ${JSON.stringify(
-                label
-              )}`
-            )
-            lls.push(key)
-          }
-        }
-      }
-    }
-  }
-  const labels = labelsMapInput ? JSON.parse(labelsMapInput) : {}
+  let [customFieldName, customFieldValue] = getFieldValue(
+    labelsMapInput,
+    issueLabels
+  )
 
-  core.info(`labels: ${labels}`)
+  core.info(`Custom field name: ${customFieldName}, value: ${customFieldValue}`)
 
   // Ensure the issue matches our `labeled` filter based on the label-operator.
   if (labelOperator === 'and') {
