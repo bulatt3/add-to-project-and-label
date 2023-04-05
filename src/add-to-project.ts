@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-
 const urlParse =
   /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/
 
@@ -69,12 +68,20 @@ export async function addToProject(): Promise<void> {
     core.info(`labelsMap: ${labelsMapInput}`)
     let lls = []
     for (const [key, value] of Object.entries(JSON.parse(labelsMapInput))) {
-      core.info(`The name of the custom field: ${key}, its values: ${JSON.stringify(value)}`)
+      core.info(
+        `The name of the custom field: ${key}, its values: ${JSON.stringify(
+          value
+        )}`
+      )
       if (Array.isArray(value)) {
         for (const label of value) {
           core.info(`Label: ${JSON.stringify(label)}`)
           if (issueLabels.includes(label.label)) {
-            core.info(`The issue has label ${label.label}, so we add ${JSON.stringify(label)}`)
+            core.info(
+              `The issue has label ${label.label}, so we add ${JSON.stringify(
+                label
+              )}`
+            )
             lls.push(key)
           }
         }
@@ -149,38 +156,40 @@ export async function addToProject(): Promise<void> {
     }
   )
 
-  // Then, get the ID of the custom field
-  const customFieldId = await octokit.graphql<any>(
-    `query getCustomField($projectId: ID!) {
-      node(id: $projectId) {
-        ... on ProjectV2 {
-          fields(first: 20) {
-            nodes {
-              ... on ProjectV2SingleSelectField {
-                id
-                name
-                options {
-                  id
-                  name
-                }
-              }
-            }
-          }
-        }
-      }
-    }`,
-    {
-      projectId: idResp,
-    }
-  )
-
-  core.debug(`Custom field ID: ${customFieldId}, ${JSON.stringify(customFieldId)}`)
-
   const projectId = idResp[ownerTypeQuery]?.projectV2.id
   const contentId = issue?.node_id
 
   core.debug(`Project node ID: ${projectId}`)
   core.debug(`Content ID: ${contentId}`)
+
+  // Then, get the ID of the custom field
+  const customFieldId = await octokit.graphql<any>(
+    `query getCustomField($projectId: ID!) {
+        node(id: $projectId) {
+          ... on ProjectV2 {
+            fields(first: 20) {
+              nodes {
+                ... on ProjectV2SingleSelectField {
+                  id
+                  name
+                  options {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`,
+    {
+      projectId
+    }
+  )
+
+  core.debug(
+    `Custom field ID: ${customFieldId}, ${JSON.stringify(customFieldId)}`
+  )
 
   // Next, use the GraphQL API to add the issue to the project.
   // If the issue has the same owner as the project, we can directly
@@ -227,7 +236,6 @@ export async function addToProject(): Promise<void> {
 
     core.setOutput('itemId', addResp.addProjectV2DraftIssue.projectItem.id)
   }
-
 }
 
 export function mustGetOwnerTypeQuery(
