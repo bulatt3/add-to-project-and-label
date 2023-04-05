@@ -1,16 +1,14 @@
 import * as core from '@actions/core'
 import {addToProject} from './add-to-project'
 
-async function run() {
-  try { 
+async function run(): Promise<void> {
+  try {
     await addToProject()
     process.exit(0)
-  } 
-  catch (error) {
+  } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message)
-    }
-    else {
+    } else {
       core.setFailed(`Unknown error: ${error}`)
     }
     process.exit(1)
