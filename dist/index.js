@@ -48,7 +48,7 @@ function isPathInput(text) {
     return !(text.includes('\n') || text.includes(':'));
 }
 function getConfigFileContent(configPath) {
-    core.info(`Getting config info from path ${configPath}, cwd: ${process.cwd()}`);
+    core.info(`Getting config info from path ${configPath}`);
     let files = fs.readdirSync(__dirname);
     core.info(`files in the current directory: ${files}, ${__dirname}`);
     let dir = path.resolve(__dirname, '..');
@@ -57,6 +57,15 @@ function getConfigFileContent(configPath) {
     dir = path.resolve(__dirname, '../..');
     files = fs.readdirSync(dir);
     core.info(`files in the grandparent directory: ${files}, ${dir}`);
+    core.info(`Current working directory: ${process.cwd()}`);
+    files = fs.readdirSync(process.cwd());
+    core.info(`files in the current working directory: ${files}`);
+    dir = path.resolve(process.cwd(), '..');
+    files = fs.readdirSync(dir);
+    core.info(`files in the parent of the current working directory: ${files}, ${dir}`);
+    dir = path.resolve(process.cwd(), '../..');
+    files = fs.readdirSync(dir);
+    core.info(`files in the grandparent of the current working directory: ${files}, ${dir}`);
     if (!fs.existsSync(configPath)) {
         throw new Error(`Configuration file '${configPath}' not found`);
     }
