@@ -1,7 +1,25 @@
 import * as core from '@actions/core'
+import * as fs from 'fs'
 import * as github from '@actions/github'
 
-const urlParse = /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/
+function isPathInput(text: string): boolean {
+  return !(text.includes('\n') || text.includes(':'))
+}
+
+function getConfigFileContent(configPath: string): string {
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`Configuration file '${configPath}' not found`)
+  }
+
+  if (!fs.lstatSync(configPath).isFile()) {
+    throw new Error(`'${configPath}' is not a file.`)
+  }
+
+  return fs.readFileSync(configPath, {encoding: 'utf8'})
+}
+
+const urlParse =
+  /\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/
 
 interface ProjectNodeIDResponse {
   organization?: {
@@ -42,17 +60,25 @@ export async function addToProject(): Promise<void> {
       .split(',')
       .map(l => l.trim().toLowerCase())
       .filter(l => l.length > 0) ?? []
-  const labelOperator = core.getInput('label-operator').trim().toLocaleLowerCase()
+  const labelOperator = core
+    .getInput('label-operator')
+    .trim()
+    .toLocaleLowerCase()
 
   const octokit = github.getOctokit(ghToken)
 
-  const issue = github.context.payload.issue ?? github.context.payload.pull_request
-  const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) => l.name.toLowerCase())
+  const issue =
+    github.context.payload.issue ?? github.context.payload.pull_request
+  const issueLabels: string[] = (issue?.labels ?? []).map((l: {name: string}) =>
+    l.name.toLowerCase()
+  )
   const issueOwnerName = github.context.payload.repository?.owner.login
-  
+
   const labelsInput = core.getInput('labels', {required: false})
-  const labelsYaml = isPathInput(labelsInput) ? getConfigFileContent(labelsInput) : labelsInput
-  
+  const labelsYaml = isPathInput(labelsInput)
+    ? getConfigFileContent(labelsInput)
+    : labelsInput
+
   core.info(`labelsYaml: ${labelsYaml}`)
   core.info(`Issue/PR owner: ${issueOwnerName}`)
   core.info(`Issue/PR labels: ${issueLabels.join(', ')}`)
@@ -62,17 +88,29 @@ export async function addToProject(): Promise<void> {
   // Ensure the issue matches our `labeled` filter based on the label-operator.
   if (labelOperator === 'and') {
     if (!labeled.every(l => issueLabels.includes(l))) {
-      core.info(`Skipping issue ${issue?.number} because it doesn't match all the labels: ${labeled.join(', ')}`)
+      core.info(
+        `Skipping issue ${
+          issue?.number
+        } because it doesn't match all the labels: ${labeled.join(', ')}`
+      )
       return
     }
   } else if (labelOperator === 'not') {
     if (labeled.length > 0 && issueLabels.some(l => labeled.includes(l))) {
-      core.info(`Skipping issue ${issue?.number} because it contains one of the labels: ${labeled.join(', ')}`)
+      core.info(
+        `Skipping issue ${
+          issue?.number
+        } because it contains one of the labels: ${labeled.join(', ')}`
+      )
       return
     }
   } else {
     if (labeled.length > 0 && !issueLabels.some(l => labeled.includes(l))) {
-      core.info(`Skipping issue ${issue?.number} because it does not have one of the labels: ${labeled.join(', ')}`)
+      core.info(
+        `Skipping issue ${
+          issue?.number
+        } because it does not have one of the labels: ${labeled.join(', ')}`
+      )
       return
     }
   }
@@ -83,7 +121,7 @@ export async function addToProject(): Promise<void> {
 
   if (!urlMatch) {
     throw new Error(
-      `Invalid project URL: ${projectUrl}. Project URL should match the format <GitHub server domain name>/<orgs-or-users>/<ownerName>/projects/<projectNumber>`,
+      `Invalid project URL: ${projectUrl}. Project URL should match the format <GitHub server domain name>/<orgs-or-users>/<ownerName>/projects/<projectNumber>`
     )
   }
 
@@ -107,8 +145,8 @@ export async function addToProject(): Promise<void> {
     }`,
     {
       projectOwnerName,
-      projectNumber,
-    },
+      projectNumber
+    }
   )
 
   const projectId = idResp[ownerTypeQuery]?.projectV2.id
@@ -134,9 +172,9 @@ export async function addToProject(): Promise<void> {
       {
         input: {
           projectId,
-          contentId,
-        },
-      },
+          contentId
+        }
+      }
     )
 
     core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
@@ -156,21 +194,29 @@ export async function addToProject(): Promise<void> {
       }`,
       {
         projectId,
-        title: issue?.html_url,
-      },
+        title: issue?.html_url
+      }
     )
 
     core.setOutput('itemId', addResp.addProjectV2DraftIssue.projectItem.id)
   }
 }
 
-export function mustGetOwnerTypeQuery(ownerType?: string): 'organization' | 'user' {
-  const ownerTypeQuery = ownerType === 'orgs' ? 'organization' : ownerType === 'users' ? 'user' : null
+export function mustGetOwnerTypeQuery(
+  ownerType?: string
+): 'organization' | 'user' {
+  const ownerTypeQuery =
+    ownerType === 'orgs'
+      ? 'organization'
+      : ownerType === 'users'
+      ? 'user'
+      : null
 
   if (!ownerTypeQuery) {
-    throw new Error(`Unsupported ownerType: ${ownerType}. Must be one of 'orgs' or 'users'`)
+    throw new Error(
+      `Unsupported ownerType: ${ownerType}. Must be one of 'orgs' or 'users'`
+    )
   }
 
   return ownerTypeQuery
 }
-
