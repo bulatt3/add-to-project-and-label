@@ -77,7 +77,7 @@ function addToProject() {
         const issue = (_b = github.context.payload.issue) !== null && _b !== void 0 ? _b : github.context.payload.pull_request;
         const issueLabels = ((_c = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _c !== void 0 ? _c : []).map((l) => l.name.toLowerCase());
         const issueOwnerName = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.login;
-        const labelsInput = core.getInput('labels', { required: false });
+        const labelsInput = core.getInput('label-map', { required: false });
         const labelsYaml = isPathInput(labelsInput)
             ? getConfigFileContent(labelsInput)
             : labelsInput;

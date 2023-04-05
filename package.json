@@ -1,6 +1,6 @@
 {
   "name": "add-to-project-and-label",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Action that adds an issue to a project and sets a custom field value based on labels",
   "main": "lib/main.js",
