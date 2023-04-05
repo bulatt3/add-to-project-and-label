@@ -77,7 +77,7 @@ export async function addToProject(): Promise<void> {
   )
   const issueOwnerName = github.context.payload.repository?.owner.login
 
-  const labelsInput = core.getInput('labels', {required: false})
+  const labelsInput = core.getInput('label-map', {required: false})
   const labelsYaml = isPathInput(labelsInput)
     ? getConfigFileContent(labelsInput)
     : labelsInput
