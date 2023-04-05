@@ -206,9 +206,9 @@ export async function addToProject(): Promise<void> {
       projectId
     }
   )
-
+  core.info(`Requested custom field: ${JSON.stringify(customFieldResp)} using the ID: ${projectId}`)
   core.info(
-    `Custom field ID: ${customFieldResp.node.field.nodes}, ${JSON.stringify(
+    `Custom field ID: ${customFieldResp?.node?.fields?.nodes}, ${JSON.stringify(
       customFieldResp
     )}`
   )
