@@ -127,52 +127,27 @@ function addToProject() {
             projectNumber
         });
         // Then, get the ID of the custom field
-        const customFieldId = yield octokit.graphql(`query getCustomFields($projectId: ID!) {
+        const customFieldId = yield octokit.graphql(`query getCustomField($projectId: ID!) {
       node(id: $projectId) {
-          ... on ProjectV2 {
-            fields(first: 10) {
-            }
-            items(first: 20) {
-              nodes{
+        ... on ProjectV2 {
+          fields(first: 20) {
+            nodes {
+              ... on ProjectV2SingleSelectField {
                 id
-                fieldValues(first: 8) {
-                  nodes{                
-                    ... on ProjectV2ItemFieldTextValue {
-                      text
-                      field {
-                        ... on ProjectV2FieldCommon {
-                          id
-                          name
-                        }
-                      }
-                    }
-                    ... on ProjectV2ItemFieldSingleSelectValue {
-                      name
-                      field {
-                        ... on ProjectV2FieldCommon {
-                          id
-                          name
-                        }
-                      }
-                    }
-                  }              
-                }
-                content{              
-                  ...on Issue {
-                    title
-                    labels(first: 10) {
-                      nodes{
-                        id
-                        name
-                      }
-                    }
-                  }
+                name
+                options {
+                  id
+                  name
                 }
               }
             }
-          }`, {
+          }
+        }
+      }
+    }`, {
             projectId: idResp,
         });
+        core.debug(`Custom field ID: ${customFieldId}, ${JSON.stringify(customFieldId)}`);
         const projectId = (_j = idResp[ownerTypeQuery]) === null || _j === void 0 ? void 0 : _j.projectV2.id;
         const contentId = issue === null || issue === void 0 ? void 0 : issue.node_id;
         core.debug(`Project node ID: ${projectId}`);

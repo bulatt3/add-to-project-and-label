@@ -151,55 +151,30 @@ export async function addToProject(): Promise<void> {
 
   // Then, get the ID of the custom field
   const customFieldId = await octokit.graphql<any>(
-    `query getCustomFields($projectId: ID!) {
+    `query getCustomField($projectId: ID!) {
       node(id: $projectId) {
-          ... on ProjectV2 {
-            fields(first: 10) {
-            }
-            items(first: 20) {
-              nodes{
+        ... on ProjectV2 {
+          fields(first: 20) {
+            nodes {
+              ... on ProjectV2SingleSelectField {
                 id
-                fieldValues(first: 8) {
-                  nodes{                
-                    ... on ProjectV2ItemFieldTextValue {
-                      text
-                      field {
-                        ... on ProjectV2FieldCommon {
-                          id
-                          name
-                        }
-                      }
-                    }
-                    ... on ProjectV2ItemFieldSingleSelectValue {
-                      name
-                      field {
-                        ... on ProjectV2FieldCommon {
-                          id
-                          name
-                        }
-                      }
-                    }
-                  }              
-                }
-                content{              
-                  ...on Issue {
-                    title
-                    labels(first: 10) {
-                      nodes{
-                        id
-                        name
-                      }
-                    }
-                  }
+                name
+                options {
+                  id
+                  name
                 }
               }
             }
-          }`,
-          {
-            projectId: idResp,
           }
+        }
+      }
+    }`,
+    {
+      projectId: idResp,
+    }
   )
 
+  core.debug(`Custom field ID: ${customFieldId}, ${JSON.stringify(customFieldId)}`)
 
   const projectId = idResp[ownerTypeQuery]?.projectV2.id
   const contentId = issue?.node_id
