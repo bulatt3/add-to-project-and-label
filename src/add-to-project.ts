@@ -211,9 +211,7 @@ export async function addToProject(): Promise<void> {
     }
   )
   core.info(
-    `Requested custom field: ${JSON.stringify(
-      customFieldResp
-    )} using the ID: ${projectId}`
+    `Requested custom field: ${JSON.stringify(customFieldResp)} using the ID: ${projectId}`
   )
   core.info(
     `Custom field ID: ${customFieldResp?.node?.fields?.nodes}, ${JSON.stringify(
@@ -223,10 +221,15 @@ export async function addToProject(): Promise<void> {
   const customFieldNode = customFieldResp?.node?.fields?.nodes?.filter(
     (node: {name: string; id: string; options: unknown[]}) =>
       node?.name === customFieldName
-  )
+  )[0]
 
   core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`)
   core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`)
+
+  const customFieldOptions = customFieldNode?.options
+  const customFieldValueId = customFieldOptions?.filter((option: {name: string, id: string }) => { if (option.name === customFieldValue) { return option.id } })[0]
+
+  core.info(`Custom field value ID: ${customFieldValueId}`)
 
   // Next, use the GraphQL API to add the issue to the project.
   // If the issue has the same owner as the project, we can directly
@@ -250,7 +253,41 @@ export async function addToProject(): Promise<void> {
       }
     )
 
-    core.setOutput('itemId', addResp.addProjectV2ItemById.item.id)
+    const itemId = addResp.addProjectV2ItemById.item.id
+
+    const setFieldValue = await octokit.graphql<any>(
+      `mutation (
+        $projectId: ID!
+        $item: ID!
+        $priority_field: ID!
+        $priority_value: String!
+      ) {
+        set_priority_field: updateProjectV2ItemFieldValue(input: {
+          projectId: $project
+          itemId: $item
+          fieldId: $priority_field
+          value: {
+            singleSelectOptionId: $priority_value
+            }
+        }) {
+          projectV2Item {
+            id
+            }
+        }
+      }`,
+      {
+        input: {
+          projectId,
+          itemId,
+          priority_field: customFieldNode.id,
+          priority_value: customFieldValueId
+        }
+      }
+    )
+
+    core.info(`Set field value: ${JSON.stringify(setFieldValue)}`)
+
+    core.setOutput('itemId', itemId)
   } else {
     core.info('Creating draft issue in project')
 

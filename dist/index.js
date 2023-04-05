@@ -171,9 +171,14 @@ function addToProject() {
         });
         core.info(`Requested custom field: ${JSON.stringify(customFieldResp)} using the ID: ${projectId}`);
         core.info(`Custom field ID: ${(_l = (_k = customFieldResp === null || customFieldResp === void 0 ? void 0 : customFieldResp.node) === null || _k === void 0 ? void 0 : _k.fields) === null || _l === void 0 ? void 0 : _l.nodes}, ${JSON.stringify(customFieldResp)}`);
-        const customFieldNode = (_p = (_o = (_m = customFieldResp === null || customFieldResp === void 0 ? void 0 : customFieldResp.node) === null || _m === void 0 ? void 0 : _m.fields) === null || _o === void 0 ? void 0 : _o.nodes) === null || _p === void 0 ? void 0 : _p.filter((node) => (node === null || node === void 0 ? void 0 : node.name) === customFieldName);
+        const customFieldNode = (_p = (_o = (_m = customFieldResp === null || customFieldResp === void 0 ? void 0 : customFieldResp.node) === null || _m === void 0 ? void 0 : _m.fields) === null || _o === void 0 ? void 0 : _o.nodes) === null || _p === void 0 ? void 0 : _p.filter((node) => (node === null || node === void 0 ? void 0 : node.name) === customFieldName)[0];
         core.info(`Custom field Node: ${JSON.stringify(customFieldNode)}`);
         core.info(`Probably the field ID: ${JSON.stringify(customFieldNode.id)}}`);
+        const customFieldOptions = customFieldNode === null || customFieldNode === void 0 ? void 0 : customFieldNode.options;
+        const customFieldValueId = customFieldOptions === null || customFieldOptions === void 0 ? void 0 : customFieldOptions.filter((option) => { if (option.name === customFieldValue) {
+            return option.id;
+        } })[0];
+        core.info(`Custom field value ID: ${customFieldValueId}`);
         // Next, use the GraphQL API to add the issue to the project.
         // If the issue has the same owner as the project, we can directly
         // add a project item. Otherwise, we add a draft issue.
@@ -191,7 +196,35 @@ function addToProject() {
                     contentId
                 }
             });
-            core.setOutput('itemId', addResp.addProjectV2ItemById.item.id);
+            const itemId = addResp.addProjectV2ItemById.item.id;
+            const setFieldValue = yield octokit.graphql(`mutation (
+        $projectId: ID!
+        $item: ID!
+        $priority_field: ID!
+        $priority_value: String!
+      ) {
+        set_priority_field: updateProjectV2ItemFieldValue(input: {
+          projectId: $project
+          itemId: $item
+          fieldId: $priority_field
+          value: {
+            singleSelectOptionId: $priority_value
+            }
+        }) {
+          projectV2Item {
+            id
+            }
+        }
+      }`, {
+                input: {
+                    projectId,
+                    itemId,
+                    priority_field: customFieldNode.id,
+                    priority_value: customFieldValueId
+                }
+            });
+            core.info(`Set field value: ${JSON.stringify(setFieldValue)}`);
+            core.setOutput('itemId', itemId);
         }
         else {
             core.info('Creating draft issue in project');
