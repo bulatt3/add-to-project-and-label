@@ -8,8 +8,8 @@ function isPathInput(text: string): boolean {
 
 function getConfigFileContent(configPath: string): string {
   core.info(`Getting config info from path ${configPath}`)
-  const files = fs.readdirSync('.')
-  core.info(`files in the current directory: ${files}`)
+  const files = fs.readdirSync(__dirname)
+  core.info(`files in the current directory: ${files}, ${__dirname}`)
   if (!fs.existsSync(configPath)) {
     throw new Error(`Configuration file '${configPath}' not found`)
   }
@@ -78,15 +78,16 @@ export async function addToProject(): Promise<void> {
   const issueOwnerName = github.context.payload.repository?.owner.login
 
   const labelsInput = core.getInput('label-map', {required: false})
+
+  core.info(`Issue/PR owner: ${issueOwnerName}`)
+  core.info(`Issue/PR labels: ${issueLabels.join(', ')}`)
+  core.debug(`Issue/PR owner: ${issueOwnerName}`)
+  core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
   const labelsYaml = isPathInput(labelsInput)
     ? getConfigFileContent(labelsInput)
     : labelsInput
 
   core.info(`labelsYaml: ${labelsYaml}`)
-  core.info(`Issue/PR owner: ${issueOwnerName}`)
-  core.info(`Issue/PR labels: ${issueLabels.join(', ')}`)
-  core.debug(`Issue/PR owner: ${issueOwnerName}`)
-  core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`)
 
   // Ensure the issue matches our `labeled` filter based on the label-operator.
   if (labelOperator === 'and') {

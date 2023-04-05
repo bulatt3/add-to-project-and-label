@@ -48,8 +48,8 @@ function isPathInput(text) {
 }
 function getConfigFileContent(configPath) {
     core.info(`Getting config info from path ${configPath}`);
-    const files = fs.readdirSync('.');
-    core.info(`files in the current directory: ${files}`);
+    const files = fs.readdirSync(__dirname);
+    core.info(`files in the current directory: ${files}, ${__dirname}`);
     if (!fs.existsSync(configPath)) {
         throw new Error(`Configuration file '${configPath}' not found`);
     }
@@ -78,14 +78,14 @@ function addToProject() {
         const issueLabels = ((_c = issue === null || issue === void 0 ? void 0 : issue.labels) !== null && _c !== void 0 ? _c : []).map((l) => l.name.toLowerCase());
         const issueOwnerName = (_d = github.context.payload.repository) === null || _d === void 0 ? void 0 : _d.owner.login;
         const labelsInput = core.getInput('label-map', { required: false });
-        const labelsYaml = isPathInput(labelsInput)
-            ? getConfigFileContent(labelsInput)
-            : labelsInput;
-        core.info(`labelsYaml: ${labelsYaml}`);
         core.info(`Issue/PR owner: ${issueOwnerName}`);
         core.info(`Issue/PR labels: ${issueLabels.join(', ')}`);
         core.debug(`Issue/PR owner: ${issueOwnerName}`);
         core.debug(`Issue/PR labels: ${issueLabels.join(', ')}`);
+        const labelsYaml = isPathInput(labelsInput)
+            ? getConfigFileContent(labelsInput)
+            : labelsInput;
+        core.info(`labelsYaml: ${labelsYaml}`);
         // Ensure the issue matches our `labeled` filter based on the label-operator.
         if (labelOperator === 'and') {
             if (!labeled.every(l => issueLabels.includes(l))) {
